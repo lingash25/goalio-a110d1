@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/images/app-icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   <script>
   // usernode-dev-console@1
@@ -176,7 +179,9 @@
     .game-screen { display: flex; flex-direction: column; height: 100vh; height: 100svh; overflow: hidden; position: relative; }
     .portrait {
       position: absolute; inset: 0; z-index: 0;
-      background-size: cover; background-position: center top;
+      display: block; width: 100%; height: 100%;
+      background-size: contain; background-position: center;
+      background-repeat: no-repeat;
     }
     .board {
       position: absolute; inset: 0; z-index: 2;
@@ -434,7 +439,8 @@
     .board-dim { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 40; }
 
     /* Result card */
-    .result-card { background: rgba(15,15,25,0.97); border: 1px solid rgba(251,191,36,0.5); border-radius: 16px; padding: 28px; text-align: center; max-width: 340px; width: 90%; box-shadow: 0 0 40px rgba(251,191,36,0.2); max-height: 85vh; overflow-y: auto; }
+    .result-card { background: rgba(15,15,25,0.97); border: 1px solid rgba(251,191,36,0.5); border-radius: 16px; padding: 28px; text-align: center; max-width: 340px; width: 90%; box-shadow: 0 0 40px rgba(251,191,36,0.2); max-height: 85vh; overflow-y: auto; position: relative; }
+    .result-card .portrait-display { width: 140px; height: 140px; margin: 0 auto 12px; border-radius: 12px; background-size: cover; background-position: center; border: 2px solid rgba(251,191,36,0.4); box-shadow: 0 0 20px rgba(251,191,36,0.2); }
     @media (max-width: 480px) {
       .result-card { padding: 20px; width: 95%; max-width: 100%; }
     }
@@ -611,6 +617,132 @@
       text-shadow:
         0 0 8px rgba(0,255,0,0.8),
         1px 1px 0 #00FFFF;
+    }
+
+    /* Retro Quip Overlay */
+    #retro-quip-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 60;
+      pointer-events: none;
+      display: none;
+    }
+
+    .retro-quip-box {
+      background: linear-gradient(135deg, rgba(20,10,40,0.95) 0%, rgba(10,10,30,0.98) 100%);
+      border: 2px solid #FF1493;
+      border-right: 2px solid #FFD700;
+      border-bottom: 2px solid #FFD700;
+      box-shadow:
+        0 0 10px rgba(255,20,147,0.8),
+        0 0 20px rgba(0,255,255,0.4),
+        inset 0 0 10px rgba(0,255,255,0.15);
+      padding: clamp(8px, 2vw, 12px);
+      position: relative;
+      clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 3px 100%, 0 calc(100% - 3px));
+      max-width: 90vw;
+      animation: quip-scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes quip-scale-in {
+      0% { transform: scale(0.5); opacity: 0; filter: blur(4px); }
+      60% { transform: scale(1.08); opacity: 1; filter: blur(0); }
+      100% { transform: scale(1); opacity: 1; filter: blur(0); }
+    }
+
+    @keyframes quip-fade-out {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* Explode/scatter exit animation */
+    @keyframes quip-explode {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.1) rotate(360deg); opacity: 0; }
+    }
+
+    /* Dissolve with pixelated effect */
+    @keyframes quip-dissolve {
+      0% { opacity: 1; filter: blur(0px) brightness(1); }
+      40% { filter: blur(2px) brightness(1.1); }
+      100% { opacity: 0; filter: blur(8px) brightness(0.5); }
+    }
+
+    /* Slide out with spin */
+    @keyframes quip-slide-spin {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-120px) rotate(-720deg); opacity: 0; }
+    }
+
+    /* Bounce out with bounce effect */
+    @keyframes quip-bounce-out {
+      0% { transform: scale(1); opacity: 1; }
+      20% { transform: scale(1.08); }
+      50% { transform: translateY(-40px) scale(0.95); opacity: 1; }
+      100% { transform: translateY(120px) scale(0.3); opacity: 0; }
+    }
+
+    .retro-quip-text {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.3rem, 1.5vw, 0.5rem);
+      color: #00FFFF;
+      text-shadow:
+        0.5px 0.5px 0 #FF1493,
+        1px 1px 0 #FFD700,
+        2px 2px 4px rgba(0,0,0,0.8);
+      letter-spacing: 0.5px;
+      margin: 0;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .retro-quip-box.fade-out {
+      animation: quip-fade-out 0.6s ease-out forwards;
+    }
+
+    .retro-quip-box.explode {
+      animation: quip-explode 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    .retro-quip-box.dissolve {
+      animation: quip-dissolve 0.8s ease-out forwards;
+    }
+
+    .retro-quip-box.slide-spin {
+      animation: quip-slide-spin 0.9s ease-in forwards;
+    }
+
+    .retro-quip-box.bounce-out {
+      animation: quip-bounce-out 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* Arcade CRT scanline effect */
+    @keyframes arcade-scanlines {
+      0% { background-position: 0 0; opacity: 0; }
+      20% { opacity: 0.3; }
+      100% { background-position: 0 4px; opacity: 0; }
+    }
+
+    /* Arcade phosphor glow pulse */
+    @keyframes arcade-phosphor-glow {
+      0%, 100% { text-shadow: 0 0 8px rgba(0,255,255,0.4), 0 0 16px rgba(255,20,147,0.3); }
+      50% { text-shadow: 0 0 16px rgba(0,255,255,0.8), 0 0 32px rgba(255,20,147,0.6); }
+    }
+
+    /* CRT roll-in effect */
+    @keyframes arcade-crt-rollin {
+      0% { clip-path: polygon(0 0, 100% 0, 100% 0%, 0 0%); opacity: 0; }
+      100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity: 1; }
+    }
+
+    /* Pixel-grid dissolve */
+    @keyframes arcade-pixel-dissolve {
+      0% { opacity: 0; filter: contrast(0.5) brightness(0.6); }
+      50% { filter: contrast(1.2) brightness(1.1); }
+      100% { opacity: 1; filter: contrast(1) brightness(1); }
     }
 
     /* Reset Game Button - 80's style */
@@ -832,6 +964,7 @@
     pendingResult: null,
     revealVariantIdx: 0,
     testingMode: localStorage.getItem('testingMode') === 'true',
+    showingVictoryStadium: false,
   };
 
   // ═══════════════════════════════════════════════════════════════
@@ -952,7 +1085,7 @@
   // One-sentence "Did you know?" facts per footballer (placeholder text).
   const FOOTBALLER_FACTS = {
     france:      'Did you know? Zidane scored two headers in the 1998 World Cup Final to win France\'s first World Cup.',
-    brazil:      'Did you know? Ronaldo Nazário scored 15 World Cup goals across three tournaments, a record at the time.',
+    brazil:      'Did you know? Neymar is Brazil\'s most capped player with over 120 international appearances and has been a key figure in multiple World Cup campaigns.',
     england:     'Did you know? Beckham is the only England player to score in three separate World Cup tournaments.',
     spain:       'Did you know? Carles Puyol captained Spain to World Cup glory in 2010 and Euro 2012, becoming one of the greatest defenders and leaders in football history.',
     argentina:   'Did you know? Maradona single-handedly led Argentina to World Cup glory in 1986, scoring the famous "Hand of God" goal and dribbling past the entire English team.',
@@ -1310,8 +1443,21 @@
   function route() {
     clearPolls();
     stopConfetti();
-    Sound.stopAllAudio();
     const hash = location.hash || '#lobby';
+
+    // Selectively stop audio based on where we're navigating FROM
+    // Don't use stopAllAudio() blindly — it kills audio like victory music
+    // that should continue playing during transitions
+    Sound.stopIntro();
+    Sound.stopLeaderboard();
+    // When leaving the victory stadium, stop the victory music
+    if (state.showingVictoryStadium) {
+      Sound.stopWinthecup();
+      state.showingVictoryStadium = false;
+    }
+    // Note: stopFindball/stopSuccesspurchase are context-specific
+    // and should only be stopped when appropriate for the target route
+
     document.getElementById('goal-ball')?.remove();
     const flagBgEl = document.getElementById('flag-bg');
     if (flagBgEl) {
@@ -1640,7 +1786,7 @@
     const app = document.getElementById('app');
     app.innerHTML = `<div class="game-screen">
       ${renderHeader()}
-      <div id="game-body" style="flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:2;">
+      <div id="game-body" style="flex:1;display:flex;flex-direction:column;overflow:visible;position:relative;z-index:2;">
         <div style="text-align:center;padding:40px;color:#555;">Loading game...</div>
       </div>
     </div>`;
@@ -1708,10 +1854,8 @@
     const myTeam = state.themes.find(t => t.slug === (state.session ? state.session.my_team_slug : ''));
     const stageIdx = state.session ? state.session.stage_idx : game.stage_idx;
 
-    // Portrait behind tiles — footballer image or trophy for final
-    const portraitUrl = stageIdx >= 6
-      ? '/images/trophy-reveal.jpg'
-      : `/images/footballers/${theme.slug}.png`;
+    // Portrait behind tiles — always show footballer image; trophy shown in result card for final
+    const portraitUrl = `/images/footballers/${theme.slug}.png`;
 
     const hud = `<div class="game-hud">
       <div class="hud-chip"><span style="display:block;">${t('game.wallet_label')}</span><span class="val wallet-val">${Math.round(state.walletBalance)} t</span></div>
@@ -1744,6 +1888,7 @@
     document.getElementById('game-body').innerHTML = `
       ${hud}
       ${nationStrip}
+      <div id="retro-quip-overlay"></div>
       <div class="board-zone" id="board-zone">
         <div class="board-wrap">
           <div class="portrait" style="background-image:url('${portraitUrl}')"></div>
@@ -1802,6 +1947,71 @@
 
   function updateCreditsDisplay() {
     updateHud();
+  }
+
+  function showRetroQuip(quipText, row) {
+    const overlay = document.getElementById('retro-quip-overlay');
+    if (!overlay) return;
+
+    overlay.innerHTML = `<div class="retro-quip-box">
+      <p class="retro-quip-text">${quipText}</p>
+    </div>`;
+    overlay.style.display = 'block';
+
+    const gridCols = state.gridCols || gridColsForStage(state.game.stage_idx);
+    const gridSize = state.gridSize || gridSizeForStage(state.game.stage_idx);
+    const tilesPerRow = gridCols;
+    const totalRows = Math.ceil(gridSize / tilesPerRow);
+    const thirdHeight = Math.ceil(totalRows / 3);
+
+    let verticalPosition;
+    if (row !== undefined && row !== null) {
+      if (row < thirdHeight) {
+        verticalPosition = 'bottom';
+      } else if (row >= 2 * thirdHeight) {
+        verticalPosition = 'top';
+      } else {
+        verticalPosition = 'top';
+      }
+    } else {
+      verticalPosition = 'top';
+    }
+
+    if (verticalPosition === 'top') {
+      overlay.style.top = '25%';
+    } else {
+      overlay.style.top = '75%';
+    }
+    overlay.style.left = '50%';
+    overlay.style.transform = 'translate(-50%, -50%)';
+
+    const quipBox = overlay.querySelector('.retro-quip-box');
+
+    // Randomly select an exit animation
+    const exitAnimations = ['fade-out', 'explode', 'dissolve', 'slide-spin', 'bounce-out'];
+    const selectedAnimation = exitAnimations[Math.floor(Math.random() * exitAnimations.length)];
+
+    // Determine animation duration based on selected animation
+    const animationDurations = {
+      'fade-out': 600,
+      'explode': 700,
+      'dissolve': 800,
+      'slide-spin': 900,
+      'bounce-out': 800
+    };
+    const animationDuration = animationDurations[selectedAnimation];
+
+    setTimeout(() => {
+      if (quipBox) {
+        quipBox.classList.add(selectedAnimation);
+      }
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        if (quipBox) {
+          quipBox.classList.remove(selectedAnimation);
+        }
+      }, animationDuration);
+    }, 1500);
   }
 
   window.onCellClick = async function(idx) {
@@ -1868,6 +2078,10 @@
           state.credits.credits_remaining = currentRemaining - 1;
         }
       }
+      // Apply testing-mode prize and jackpot winnings to wallet
+      if (testingModeActive && d.hit) {
+        state.walletBalance = (state.walletBalance || 0) + (d.prize_paid || 0) + (d.jackpot_paid || 0);
+      }
       // Apply testing-mode final-game refund to wallet
       if (testingModeActive && d.credits_refunded > 0) {
         state.walletBalance = (state.walletBalance || 0) + d.credits_refunded;
@@ -1898,9 +2112,11 @@
           const cleanupTime = Math.round(actualDuration * 1000);
           setTimeout(() => { cell.classList.add('open'); cell.classList.remove(variant); if (isFast) cell.classList.remove('reveal-fast'); cell.style.pointerEvents = 'none'; }, cleanupTime);
         }
-        // Update hint bar
-        const hint = document.getElementById('hint-bar');
-        if (hint) hint.textContent = QUIPS[Math.floor(Math.random() * QUIPS.length)];
+        // Show retro quip overlay with smart positioning based on tile row
+        const gridCols = state.gridCols || gridColsForStage(state.game.stage_idx);
+        const tileRow = Math.floor(idx / gridCols);
+        const quip = QUIPS[Math.floor(Math.random() * QUIPS.length)];
+        showRetroQuip(quip, tileRow);
         document.querySelectorAll('.tile:not(.open)').forEach(c => c.style.pointerEvents = '');
       }
     } catch(e) {
@@ -1978,7 +2194,7 @@
 
     const goalText = isFinal ? t('celebration.champions') : t('celebration.goal');
     const subtitleText = isFinal ? t('celebration.won_cup') : t('celebration.scored');
-    const fontSize = isFinal ? '4.5rem' : '5.5rem';
+    const fontSize = isFinal ? 'clamp(1.8rem, 4.5vw, 4.5rem)' : 'clamp(2rem, 5vw, 5.5rem)';
 
     goalOverlay.innerHTML = `
       <div class="goal-text" style="
@@ -1986,7 +2202,7 @@
         color:${accentColor || '#fbbf24'};
         text-shadow:0 0 20px ${accentColor || '#fbbf24'}77,
                     0 4px 12px rgba(0,0,0,0.8);
-        line-height:1;margin:0;
+        line-height:1;margin:0;white-space:nowrap;
       ">${goalText}</div>
       <div class="goal-subtitle" style="
         font-family:'DM Sans',sans-serif;font-size:1rem;
@@ -1996,7 +2212,7 @@
     `;
 
     document.body.appendChild(goalOverlay);
-    setTimeout(() => goalOverlay.remove(), 1200);
+    setTimeout(() => goalOverlay.remove(), 600);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -2071,6 +2287,8 @@
       if (nameTagEl) {
         nameTagEl.style.opacity = '1';
         nameTagEl.style.animation = 'none';
+        nameTagEl.style.display = 'block';
+        nameTagEl.style.visibility = 'visible';
       }
 
       let resultTitle = 'You found the net!';
@@ -2083,9 +2301,11 @@
       resultCard.className = 'result-overlay';
       resultCard.style.cssText = `position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);`;
       const icon = isFinal ? '🏆' : '⚽';
+      const portraitUrl = isFinal ? `/images/trophy.svg` : `/images/footballers/${theme.slug}.png`;
+      const iconHtml = isFinal ? '' : `<div style="font-size:2rem;margin-bottom:8px;">${icon}</div>`;
       resultCard.innerHTML = `
         <div class="result-card">
-          <div style="font-size:2rem;margin-bottom:8px;">${icon}</div>
+          ${iconHtml}
           <div style="font-family:'DM Sans',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:4px;">${resultTitle}</div>
           ${result.jackpot_paid > 0 && !isFinal ? `<div style="font-size:0.85rem;color:#aaa;margin-bottom:4px;">${stageIdx >= 3 ? theme.country_name + ' knocked out!' : 'You found the net!'}</div>` : ''}
           <div style="font-family:'Space Mono',monospace;color:#fbbf24;font-size:1.1rem;margin:12px 0;">+${result.prize_paid} tokens</div>
@@ -2118,9 +2338,9 @@
     const selectedTreatment = goalTreatments[Math.floor(Math.random() * goalTreatments.length)];
 
     if (selectedTreatment === 'goal-marquee') {
-      bannerEl.innerHTML = `<span class="goal-marquee" style="font-family:'DM Sans',sans-serif;font-size:2rem;font-weight:900;color:#fbbf24;text-shadow:0 0 20px rgba(251,191,36,0.7);display:inline-block;">GOAL! GOAL! GOAL!</span>`;
+      bannerEl.innerHTML = `<span class="goal-marquee" style="font-family:'DM Sans',sans-serif;font-size:clamp(1.2rem,5vw,2rem);font-weight:900;color:#fbbf24;text-shadow:0 0 20px rgba(251,191,36,0.7);display:inline-block;">GOAL! GOAL! GOAL!</span>`;
     } else {
-      bannerEl.innerHTML = `<span class="${selectedTreatment}" style="font-family:'DM Sans',sans-serif;font-size:2rem;font-weight:900;display:inline-block;text-shadow:0 0 20px rgba(251,191,36,0.7);">${banner}</span>`;
+      bannerEl.innerHTML = `<span class="${selectedTreatment}" style="font-family:'DM Sans',sans-serif;font-size:clamp(1.2rem,5vw,2rem);font-weight:900;display:inline-block;text-shadow:0 0 20px rgba(251,191,36,0.7);">${banner}</span>`;
     }
     boardZone && boardZone.appendChild(bannerEl);
 
@@ -2131,7 +2351,7 @@
     const nameTag = document.createElement('div');
     nameTag.id = 'nametag-box';
     nameTag.style.cssText = `position:absolute;bottom:12px;left:0;right:0;text-align:center;z-index:60;padding:0 8px;`;
-    const footballerText = isFinal ? 'World Cup Trophy 🏆' : `${theme.footballer_name} — ${theme.country_name}`;
+    const footballerText = `${theme.footballer_name} — ${theme.country_name}`;
     const fact = !isFinal ? (FOOTBALLER_FACTS[theme.slug] || '') : '';
     const factHtml = fact ? `<div style="font-family:'DM Sans',sans-serif;font-size:clamp(0.6rem, 1.5vw, 0.68rem);font-style:italic;color:#fbbf24;margin-top:4px;line-height:1.35;max-width:90vw;word-wrap:break-word;overflow-wrap:break-word;">${fact}</div>` : '';
     nameTag.innerHTML = `<div style="display:inline-block;max-width:90vw;background:rgba(0,0,0,0.84);padding:7px 14px 8px;border-radius:16px;text-align:center;">
@@ -2221,7 +2441,8 @@
     if (skipWinSequence) { clearTimeout(confettiStopTimer); return showResult(); }
 
     // Confetti already stopped at 3s mark, now show the name tag with trivia
-    nameTag.style.animation = 'toast-in 0.5s ease, fadeout 3s ease 3.5s forwards';
+    // Keep nameTag visible for 4 seconds (fade in 0.5s, visible 4s, then fade out)
+    nameTag.style.animation = 'toast-in 0.5s ease, fadeout 3s ease 4.5s forwards';
     boardZone && boardZone.appendChild(nameTag);
 
     // Wait while name tag is visible and fading (~7-8 seconds total from goal scored)
@@ -2265,11 +2486,14 @@
   // ═══════════════════════════════════════════════════════════════
   function pricingForStage(stageIdx) {
     let perShot;
-    if (stageIdx <= 2) perShot = 13;
-    else if (stageIdx <= 4) perShot = 8;
-    else if (stageIdx === 5) perShot = 5.5;
-    else perShot = 4;
-    return { perShot, bundle2: perShot * 2, bundle8: perShot * 8, bundle16: perShot * 16 };
+    if (stageIdx <= 2) perShot = 6.5;
+    else if (stageIdx <= 4) perShot = 4;
+    else if (stageIdx === 5) perShot = 2.75;
+    else perShot = 2;
+    const bundle2Cost = Math.round(perShot * 2 * 0.97);
+    const bundle8Cost = Math.round(perShot * 8 * 0.85);
+    const bundle16Cost = Math.round(perShot * 16 * 0.80);
+    return { perShot, bundle2: bundle2Cost, bundle8: bundle8Cost, bundle16: bundle16Cost };
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -2407,6 +2631,7 @@
   // VICTORY STADIUM
   // ═══════════════════════════════════════════════════════════════
   async function renderVictoryStadium(result) {
+    state.showingVictoryStadium = true;
     Sound.playWinthecup();
     startConfetti();
     const r = await api('GET', '/api/session');

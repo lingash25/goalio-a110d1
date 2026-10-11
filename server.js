@@ -13,7 +13,7 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
   max: 20,
 });
-const JWT_SECRET = process.env.JWT_SECRET;
+const USERNODE_JWT_PUBLIC_KEY = process.env.USERNODE_JWT_PUBLIC_KEY;
 const IS_STAGING = process.env.USERNODE_ENV === 'staging';
 const HOUSE_BONUS_TOKENS = 50;
 
@@ -24,17 +24,22 @@ const HOUSE_WALLET_ADDRESS = process.env.HOUSE_WALLET_ADDRESS || 'ut1yusmc55zyqc
 const USERNODE_SIDECAR_URL = process.env.USERNODE_SIDECAR_URL || (IS_STAGING ? 'http://usernode:3001' : 'http://usernode:3000');
 const MOCK_WALLET_TXS = IS_STAGING && (!HOUSE_WALLET_PRIVATE_KEY || process.env.MOCK_WALLET_TXS === 'true');
 
-const PUBLIC_API_PATHS = new Set(['/health', '/api/league', '/api/session', '/api/themes', '/api/captain-pot', '/api/env', '/api/admin/check', '/api/admin/reset-game', '/api/testing-mode']);
+const PUBLIC_API_PATHS = new Set(['/health', '/api/league', '/api/session', '/api/themes', '/api/captain-pot', '/api/env', '/api/admin/check', '/api/admin/reset-game', '/api/testing-mode', '/favicon.ico']);
 const PUBLIC_PREFIXES = ['/explorer-api/', '/api/games/'];
 
 app.use(express.json());
+
+app.get('/favicon.ico', (req, res) => res.type('image/png').sendFile(path.join(__dirname, 'public', 'favicon-32.png')));
 
 app.use((req, res, next) => {
   const authHeader = req.headers['authorization'] || '';
   const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
   const token = req.query.token || req.headers['x-usernode-token'] || bearerToken;
-  if (token && JWT_SECRET) {
-    try { req.user = jwt.verify(token, JWT_SECRET); } catch {}
+  if (token && USERNODE_JWT_PUBLIC_KEY) {
+    try {
+      const payload = jwt.verify(token, USERNODE_JWT_PUBLIC_KEY, { algorithms: ['RS256'], issuer: 'usernode', audience: 'usernode:app:' + process.env.USERNODE_APP_ID });
+      if (payload.pur === 'iframe') req.user = payload;
+    } catch {}
   }
   if (req.method !== 'GET' || req.path.startsWith('/api/')) {
     if (PUBLIC_API_PATHS.has(req.path)) return next();
@@ -65,17 +70,21 @@ function gridColsForStage(stageIdx) {
   return 7;
 }
 
-// Per-stage shot pricing. Set so the house keeps ~12.5% (10-15% band) on a
+// Per-stage shot pricing. Set so the house keeps ~6% (app owner cut) on a
 // typical board regardless of grid size: smaller easy boards are found in
 // fewer shots, so they cost more per shot; big hard boards cost less.
-//   group 13 t/shot, knockout 8, semi 5.5, final 4
+//   group 6.5 t/shot, knockout 4, semi 2.75, final 2
+// Reduced by ~50% to match the reduced prizeDecay payouts
 function pricingForStage(stageIdx) {
   let perShot;
-  if (stageIdx <= 2) perShot = 13;
-  else if (stageIdx <= 4) perShot = 8;
-  else if (stageIdx === 5) perShot = 5.5;
-  else perShot = 4;
-  return { perShot, bundle2: perShot * 2, bundle8: perShot * 8, bundle16: perShot * 16 };
+  if (stageIdx <= 2) perShot = 6.5;
+  else if (stageIdx <= 4) perShot = 4;
+  else if (stageIdx === 5) perShot = 2.75;
+  else perShot = 2;
+  const bundle2Cost = Math.round(perShot * 2 * 0.97);
+  const bundle8Cost = Math.round(perShot * 8 * 0.85);
+  const bundle16Cost = Math.round(perShot * 16 * 0.80);
+  return { perShot, bundle2: bundle2Cost, bundle8: bundle8Cost, bundle16: bundle16Cost };
 }
 
 // Captain's Pot floor per stage tier — rounded UP to tidy figures (per the
@@ -107,7 +116,9 @@ function potTierName(tier) {
 // 0.4444 = 16/36): ~148 on a fresh board, ~75 at 44% revealed, floor 8 late.
 function prizeDecay(n, gridSize) {
   const N = gridSize || 36;
-  return Math.max(8, Math.floor(150 / (1 + Math.exp(10.8 * (n / N - 0.4444)))));
+  // Adjusted payout formula to achieve ~6% app owner cut instead of ~12.5%
+  // Reduced base payout from 150 to 75 tokens, maintaining the same curve shape
+  return Math.max(4, Math.floor(75 / (1 + Math.exp(10.8 * (n / N - 0.4444)))));
 }
 
 // Lazy timeout check — called at start of GET /api/games and GET /api/session
@@ -1541,9 +1552,9 @@ app.get('*', (_req, res) => {
 
 const THEMES_SEED = [
   { slug: 'france',      country_name: 'France',      accent_colour: '#3b6dff', footballer_name: 'Zinedine Zidane' },
-  { slug: 'brazil',      country_name: 'Brazil',      accent_colour: '#22c55e', footballer_name: 'Ronaldo Nazário' },
+  { slug: 'brazil',      country_name: 'Brazil',      accent_colour: '#22c55e', footballer_name: 'Neymar' },
   { slug: 'england',     country_name: 'England',     accent_colour: '#e23b4e', footballer_name: 'David Beckham' },
-  { slug: 'spain',       country_name: 'Spain',       accent_colour: '#f1bf00', footballer_name: 'Andrés Iniesta' },
+  { slug: 'spain',       country_name: 'Spain',       accent_colour: '#f1bf00', footballer_name: 'Carles Puyol' },
   { slug: 'argentina',   country_name: 'Argentina',   accent_colour: '#74ACDF', footballer_name: 'Diego Maradona' },
   { slug: 'morocco',     country_name: 'Morocco',     accent_colour: '#1db954', footballer_name: 'Hakim Ziyech' },
   { slug: 'usa',         country_name: 'USA',         accent_colour: '#4f7bff', footballer_name: 'Landon Donovan' },
